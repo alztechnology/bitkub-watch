@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AL Wolf Bitkub Watch</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐺</text></svg>">
+<style>
+:root{--bg:#0b0e14;--card:#141a24;--line:#232c3b;--tx:#e6ebf2;--mut:#8b97a8;--acc:#6ea8ff;--up:#2ecc8f;--dn:#ff5d73;--warn:#f5b942}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 400px at 85% -10%,#1b2540 0,transparent 60%),var(--bg);color:var(--tx);font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif}
+header{padding:16px 14px 6px;max-width:1100px;margin:auto}
+h1{margin:0;font-size:22px}h1 span{color:var(--acc)}
+.sub{color:var(--mut);font-size:12px;margin-top:4px}
+main{max-width:1100px;margin:auto;padding:8px 14px 40px}
+h2{font-size:15px;margin:22px 0 8px;color:var(--acc)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.c b{font-size:16px}.c .r{color:var(--warn);font-weight:600}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+input,select,button{background:#101620;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit}
+button{cursor:pointer}button:hover{border-color:var(--acc)}
+label{color:var(--mut);display:flex;gap:6px;align-items:center}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);cursor:pointer;user-select:none;position:sticky;top:0;background:#101620;font-weight:600;font-size:12px}
+th.s::after{content:" ▾"}th.s.asc::after{content:" ▴"}
+tr:hover td{background:#18202d}
+.up{color:var(--up)}.dn{color:var(--dn)}
+.tag{display:inline-block;padding:1px 7px;border-radius:99px;font-size:11px;margin-left:4px;border:1px solid}
+.vb{color:var(--up);border-color:var(--up)}.pp{color:var(--warn);border-color:var(--warn)}.tv{color:var(--mut);border-color:var(--mut)}
+.add{padding:2px 8px;font-size:12px}
+.mine{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:8px 0}
+.mine input{width:100%}
+footer{color:var(--mut);font-size:12px;text-align:center;padding:20px 14px;border-top:1px solid var(--line)}
+.empty{color:var(--mut);padding:14px}
+</style></head><body>
+<header>
+<h1>🐺 AL Wolf <span>Bitkub Watch</span></h1>
+<div class="sub" id="upd">Loading…</div>
+</header>
+<main>
+<h2>Top 5 volume building</h2>
+<div class="cards" id="top"></div>
+
+<h2>Our Coins 🐺</h2>
+<div class="mine">
+  <select id="addSym"></select>
+  <input id="addEntry" type="number" step="any" placeholder="Entry ฿">
+  <input id="addTarget" type="number" step="any" placeholder="Target ฿">
+  <input id="addNote" placeholder="Note">
+  <button id="addBtn">Add</button>
+</div>
+<div class="wrap"><table id="mineT"><thead><tr><th>Coin</th><th>Price ฿</th><th>Entry ฿</th><th>vs entry</th><th>Target ฿</th><th>to target</th><th>Note</th><th></th></tr></thead><tbody></tbody></table></div>
+<div class="bar"><button id="exp">Export JSON</button><button id="imp">Import JSON</button><input type="file" id="file" accept="application/json" hidden></div>
+
+<h2>Small-cap scan</h2>
+<div class="bar">
+  <input id="q" placeholder="Search coin…">
+  <label><input type="checkbox" id="vbOnly"> Volume building only</label>
+  <span class="sub" id="cnt"></span>
+</div>
+<div class="wrap"><table id="t"><thead><tr id="hdr"></tr></thead><tbody></tbody></table></div>
+</main>
+<footer>Not financial advice. Data from Bitkub public API (and CoinGecko market caps), refreshed about every 15 min. Small caps are risky. No login, wallet or trading here.</footer>
+<script>
+const COLS=[["symbol","Coin"],["price","Price ฿"],["chg24h","24h %"],["vol24h","24h vol ฿"],["volRatio","Vol ratio"],["chg7d","7d %"],["flags","Flags"],["",""]];
+let data=null,sortKey="volRatio",asc=false;
+const $=id=>document.getElementById(id);
+const nf=(n,d=2)=>n==null?"n/a":Number(n).toLocaleString("en-US",{maximumFractionDigits:d});
+const pr=n=>n==null?"n/a":(n>=100?nf(n,2):n>=1?nf(n,3):nf(n,6));
+const pct=n=>n==null?'<span style="color:var(--mut)">n/a</span>':`<span class="${n>=0?"up":"dn"}">${n>=0?"+":""}${nf(n)}%</span>`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const tag=f=>f=="Volume building"?'<span class="tag vb">Volume building</span>':f=="Pumped already"?'<span class="tag pp">Pumped already</span>':'<span class="tag tv">Thin volume</span>';
+let mine=[];try{mine=JSON.parse(localStorage.getItem("alwolf_coins")||"[]")}catch(e){}
+const save=()=>localStorage.setItem("alwolf_coins",JSON.stringify(mine));
+
+async function load(){
+  try{
+    const r=await fetch("data.json?t="+Date.now(),{cache:"no-store"});
+    data=await r.json();
+    const d=new Date(data.updatedUtc);
+    const myt=new Date(d.getTime()+8*3600e3).toISOString().replace("T"," ").slice(0,16);
+    const mins=Math.round((Date.now()-d)/60000);
+    $("upd").textContent=`Last updated ${myt} MYT (${mins} min ago) · ${data.count} small caps`;
+    render();
+  }catch(e){$("upd").textContent="Could not load data.json — retrying in 5 min"}
+}
+function by(sym){return data&&data.coins.find(c=>c.symbol==sym)}
+function render(){
+  if(!data)return;
+  const vb=data.coins.filter(c=>c.flags.includes("Volume building")).sort((a,b)=>b.volRatio-a.volRatio).slice(0,5);
+  $("top").innerHTML=vb.map(c=>`<div class="c"><b>${esc(c.symbol)}</b> <span class="r">${nf(c.volRatio,1)}x</span><br>฿${pr(c.price)}<br>${pct(c.chg24h)} 24h · ${pct(c.chg7d)} 7d<br><span class="sub">vol ฿${nf(c.vol24h,0)}</span></div>`).join("")||'<div class="empty">None right now</div>';
+  const sel=$("addSym"),cur=sel.value;
+  sel.innerHTML=data.coins.slice().sort((a,b)=>a.symbol.localeCompare(b.symbol)).map(c=>`<option>${esc(c.symbol)}</option>`).join("");
+  if(cur)sel.value=cur;
+  renderMine();renderTable();
+}
+function renderTable(){
+  const q=$("q").value.trim().toUpperCase(),only=$("vbOnly").checked;
+  let rows=data.coins.filter(c=>(!q||c.symbol.includes(q))&&(!only||c.flags.includes("Volume building")));
+  const k=sortKey;
+  rows.sort((a,b)=>{let x=a[k],y=b[k];if(k=="flags"){x=a.flags.join();y=b.flags.join()}
+    if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;
+    const c=typeof x=="string"?x.localeCompare(y):x-y;return asc?c:-c});
+  $("hdr").innerHTML=COLS.map(([key,l])=>`<th data-k="${key}" class="${key==sortKey?"s "+(asc?"asc":""):""}">${l}</th>`).join("");
+  document.querySelectorAll("#hdr th").forEach(th=>th.onclick=()=>{const key=th.dataset.k;if(!key)return;if(sortKey==key)asc=!asc;else{sortKey=key;asc=key=="symbol"}renderTable()});
+  $("t").tBodies[0].innerHTML=rows.map(c=>`<tr><td><b>${esc(c.symbol)}</b></td><td>${pr(c.price)}</td><td>${pct(c.chg24h)}</td><td>${nf(c.vol24h,0)}</td><td>${c.volRatio==null?"n/a":nf(c.volRatio,1)+"x"}</td><td>${pct(c.chg7d)}</td><td>${c.flags.map(tag).join("")}</td><td><button class="add" data-s="${esc(c.symbol)}">+ Ours</button></td></tr>`).join("")||'<tr><td colspan="8" class="empty">No matches</td></tr>';
+  document.querySelectorAll(".add").forEach(b=>b.onclick=()=>{$("addSym").value=b.dataset.s;$("addEntry").value=by(b.dataset.s).price;$("addEntry").focus();window.scrollTo({top:$("addSym").offsetTop-80,behavior:"smooth"})});
+  $("cnt").textContent=rows.length+" shown";
+}
+function renderMine(){
+  $("mineT").tBodies[0].innerHTML=mine.map((m,i)=>{const c=by(m.sym),p=c?c.price:null;
+    const vs=p&&m.entry?(p/m.entry-1)*100:null,tg=p&&m.target?(m.target/p-1)*100:null;
+    return `<tr><td><b>${esc(m.sym)}</b></td><td>${p==null?"n/a":pr(p)}</td><td>${m.entry?pr(m.entry):"-"}</td><td>${pct(vs)}</td><td>${m.target?pr(m.target):"-"}</td><td>${tg==null?"-":(tg<=0?"🎯 hit":"+"+nf(tg)+"%")}</td><td style="text-align:left;white-space:normal">${esc(m.note||"")}</td><td><button data-i="${i}" class="rm">Remove</button></td></tr>`}).join("")||'<tr><td colspan="8" class="empty">Nothing yet. Add a coin above or press “+ Ours” in the table.</td></tr>';
+  document.querySelectorAll(".rm").forEach(b=>b.onclick=()=>{mine.splice(+b.dataset.i,1);save();renderMine()});
+}
+$("addBtn").onclick=()=>{const sym=$("addSym").value;if(!sym)return;
+  mine.push({sym,entry:parseFloat($("addEntry").value)||null,target:parseFloat($("addTarget").value)||null,note:$("addNote").value.trim(),added:new Date().toISOString()});
+  save();["addEntry","addTarget","addNote"].forEach(i=>$(i).value="");renderMine()};
+$("exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(mine,null,2)],{type:"application/json"}));a.download="alwolf-coins.json";a.click()};
+$("imp").onclick=()=>$("file").click();
+$("file").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(!Array.isArray(j))throw 0;mine=j.filter(x=>x&&x.sym);save();renderMine()}catch(_){alert("Invalid file")}e.target.value=""};
+$("q").oninput=()=>data&&renderTable();$("vbOnly").onchange=()=>data&&renderTable();
+load();setInterval(load,300000);
+</script></body></html>
