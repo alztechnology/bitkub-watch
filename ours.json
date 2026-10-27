@@ -1,4 +1,4 @@
 [
-  {"sym": "NOM", "entry": 0.05675, "qty": 156489.02, "target": null, "note": "Bought 27 Oct, vol-building pick"},
-  {"sym": "PUMP", "entry": 0.142229, "qty": 105943.5, "target": null, "note": "Pump.fun"}
+  {"sym": "NOM", "entry": 0.05675, "target": null, "note": "Bought 27 Oct, vol-building pick"},
+  {"sym": "PUMP", "entry": 0.142229, "target": null, "note": "Pump.fun"}
 ]
