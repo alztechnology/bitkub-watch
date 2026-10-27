@@ -105,8 +105,18 @@ def main():
         r["mcapUsd"] = caps.get(r["symbol"]) or None
         r["flags"] = flag(r)
     rows.sort(key=lambda r: (-(r["volRatio"] or 0)))
+    # prices for every coin in ours.json, even if excluded from the scan list
+    ours = {}
+    try:
+        for m in json.load(open(os.path.join(HERE, "ours.json"))):
+            t = tick.get("THB_" + m["sym"].upper())
+            if t:
+                ours[m["sym"].upper()] = {"price": float(t.get("last") or 0), "chg24h": t.get("percentChange"),
+                                          "vol24h": float(t.get("quoteVolume") or 0)}
+    except Exception as e:
+        print("ours.json skipped:", e)
     out = {"updatedUtc": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-           "count": len(rows), "coins": rows}
+           "count": len(rows), "coins": rows, "ours": ours}
     json.dump(out, open(os.path.join(HERE, "data.json"), "w"), separators=(",", ":"))
     print("wrote", len(rows), "coins;", sum("Volume building" in r["flags"] for r in rows), "volume building")
 

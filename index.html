@@ -45,12 +45,12 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:20px 14px;borde
 <h2>Our Coins 🐺</h2>
 <div class="mine">
   <select id="addSym"></select>
-  <input id="addEntry" type="number" step="any" placeholder="Entry ฿">
+  <input id="addEntry" type="number" step="any" placeholder="Entry ฿"><input id="addQty" type="number" step="any" placeholder="Qty">
   <input id="addTarget" type="number" step="any" placeholder="Target ฿">
   <input id="addNote" placeholder="Note">
   <button id="addBtn">Add</button>
 </div>
-<div class="wrap"><table id="mineT"><thead><tr><th>Coin</th><th>Price ฿</th><th>Entry ฿</th><th>vs entry</th><th>Target ฿</th><th>to target</th><th>Note</th><th></th></tr></thead><tbody></tbody></table></div>
+<div class="wrap"><table id="mineT"><thead><tr><th>Coin</th><th>Price ฿</th><th>Entry ฿</th><th>Qty</th><th>Value ฿</th><th>PnL ฿</th><th>PnL %</th><th>Target ฿</th><th>to target</th><th>Note</th><th></th></tr></thead><tbody></tbody></table></div>
 <div class="bar"><button id="exp">Export JSON</button><button id="imp">Import JSON</button><input type="file" id="file" accept="application/json" hidden></div>
 
 <h2>Small-cap scan</h2>
@@ -85,7 +85,11 @@ async function load(){
     render();
   }catch(e){$("upd").textContent="Could not load data.json — retrying in 5 min"}
 }
-function by(sym){return data&&data.coins.find(c=>c.symbol==sym)}
+function by(sym){if(!data)return null;const c=data.coins.find(c=>c.symbol==sym);if(c)return c;const o=data.ours&&data.ours[sym];return o?{symbol:sym,price:o.price,chg24h:o.chg24h,vol24h:o.vol24h}:null}
+let repo=[];
+async function loadRepo(){try{const r=await fetch("ours.json?t="+Date.now(),{cache:"no-store"});if(r.ok)repo=(await r.json()).filter(x=>x&&x.sym)}catch(e){}}
+function allMine(){const seen=new Set(repo.map(m=>m.sym.toUpperCase()));
+  return repo.map(m=>({...m,fromRepo:true})).concat(mine.map((m,i)=>({...m,li:i})).filter(m=>!seen.has(m.sym.toUpperCase())))}
 function render(){
   if(!data)return;
   const vb=data.coins.filter(c=>c.flags.includes("Volume building")).sort((a,b)=>b.volRatio-a.volRatio).slice(0,5);
@@ -109,17 +113,23 @@ function renderTable(){
   $("cnt").textContent=rows.length+" shown";
 }
 function renderMine(){
-  $("mineT").tBodies[0].innerHTML=mine.map((m,i)=>{const c=by(m.sym),p=c?c.price:null;
+  let tv=0,tp=0,tc=0;
+  const rows=allMine().map(m=>{const c=by(m.sym),p=c?c.price:null,q=m.qty||null;
+    const val=p&&q?p*q:null,cost=m.entry&&q?m.entry*q:null,pnl=val!=null&&cost!=null?val-cost:null;
     const vs=p&&m.entry?(p/m.entry-1)*100:null,tg=p&&m.target?(m.target/p-1)*100:null;
-    return `<tr><td><b>${esc(m.sym)}</b></td><td>${p==null?"n/a":pr(p)}</td><td>${m.entry?pr(m.entry):"-"}</td><td>${pct(vs)}</td><td>${m.target?pr(m.target):"-"}</td><td>${tg==null?"-":(tg<=0?"🎯 hit":"+"+nf(tg)+"%")}</td><td style="text-align:left;white-space:normal">${esc(m.note||"")}</td><td><button data-i="${i}" class="rm">Remove</button></td></tr>`}).join("")||'<tr><td colspan="8" class="empty">Nothing yet. Add a coin above or press “+ Ours” in the table.</td></tr>';
+    if(val!=null&&cost!=null){tv+=val;tp+=pnl;tc+=cost}
+    const pc=pnl==null?"":pnl>=0?"up":"dn";
+    return `<tr><td><b>${esc(m.sym)}</b>${m.fromRepo?' <span class="tag tv">saved</span>':""}</td><td>${p==null?"n/a":pr(p)}</td><td>${m.entry?pr(m.entry):"-"}</td><td>${q?nf(q,2):"-"}</td><td>${val==null?"-":nf(val,0)}</td><td class="${pc}">${pnl==null?"-":(pnl>=0?"+":"")+nf(pnl,0)}</td><td>${pct(vs)}</td><td>${m.target?pr(m.target):"-"}</td><td>${tg==null?"-":(tg<=0?"🎯 hit":"+"+nf(tg)+"%")}</td><td style="text-align:left;white-space:normal">${esc(m.note||"")}</td><td>${m.fromRepo?"":`<button data-i="${m.li}" class="rm">Remove</button>`}</td></tr>`}).join("");
+  const tot=tc?`<tr><td><b>Total</b></td><td></td><td></td><td></td><td><b>${nf(tv,0)}</b></td><td class="${tp>=0?"up":"dn"}"><b>${tp>=0?"+":""}${nf(tp,0)}</b></td><td>${pct(tp/tc*100)}</td><td colspan="4"></td></tr>`:"";
+  $("mineT").tBodies[0].innerHTML=(rows+tot)||'<tr><td colspan="11" class="empty">Nothing yet.</td></tr>';
   document.querySelectorAll(".rm").forEach(b=>b.onclick=()=>{mine.splice(+b.dataset.i,1);save();renderMine()});
 }
 $("addBtn").onclick=()=>{const sym=$("addSym").value;if(!sym)return;
-  mine.push({sym,entry:parseFloat($("addEntry").value)||null,target:parseFloat($("addTarget").value)||null,note:$("addNote").value.trim(),added:new Date().toISOString()});
-  save();["addEntry","addTarget","addNote"].forEach(i=>$(i).value="");renderMine()};
+  mine.push({sym,entry:parseFloat($("addEntry").value)||null,qty:parseFloat($("addQty").value)||null,target:parseFloat($("addTarget").value)||null,note:$("addNote").value.trim(),added:new Date().toISOString()});
+  save();["addEntry","addQty","addTarget","addNote"].forEach(i=>$(i).value="");renderMine()};
 $("exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(mine,null,2)],{type:"application/json"}));a.download="alwolf-coins.json";a.click()};
 $("imp").onclick=()=>$("file").click();
-$("file").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(!Array.isArray(j))throw 0;mine=j.filter(x=>x&&x.sym);save();renderMine()}catch(_){alert("Invalid file")}e.target.value=""};
+$("file").onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());if(!Array.isArray(j))throw 0;mine=j.filter(x=>x&&x.sym&&!x.fromRepo);save();renderMine()}catch(_){alert("Invalid file")}e.target.value=""};
 $("q").oninput=()=>data&&renderTable();$("vbOnly").onchange=()=>data&&renderTable();
-load();setInterval(load,300000);
+loadRepo().then(load);setInterval(()=>{loadRepo();load()},300000);
 </script></body></html>
