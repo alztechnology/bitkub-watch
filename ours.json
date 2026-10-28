@@ -1,4 +1,4 @@
 [
   {"sym": "NOM", "entry": 0.05675, "target": null, "note": "Bought 27 Oct, vol-building pick"},
-  {"sym": "PUMP", "entry": 0.142229, "target": null, "note": "Pump.fun"}
+  {"sym": "DOOD", "entry": 0.0699, "target": 0.080, "tp": [0.080, 0.083], "cut": 0.064, "note": "Bought 28 Oct (swapped from PUMP). TP ฿0.080–0.083, cut ฿0.064"}
 ]

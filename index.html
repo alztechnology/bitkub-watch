@@ -73,6 +73,8 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"
 const tag=f=>f=="Volume building"?'<span class="tag vb">Volume building</span>':f=="Pumped already"?'<span class="tag pp">Pumped already</span>':'<span class="tag tv">Thin volume</span>';
 let mine=[];try{mine=JSON.parse(localStorage.getItem("alwolf_coins")||"[]")}catch(e){}
 const save=()=>localStorage.setItem("alwolf_coins",JSON.stringify(mine));
+if(localStorage.getItem("alwolf_seed_v")!=="2"){mine=mine.filter(m=>m&&String(m.sym).toUpperCase()!=="PUMP");if(!mine.some(m=>String(m.sym).toUpperCase()==="DOOD"))mine.push({sym:"DOOD",entry:0.0699,target:0.080});save();localStorage.setItem("alwolf_seed_v","2")}
+const DROPPED=new Set(["PUMP"]);
 
 async function load(){
   try{
@@ -89,7 +91,7 @@ function by(sym){if(!data)return null;const c=data.coins.find(c=>c.symbol==sym);
 let repo=[];
 async function loadRepo(){try{const r=await fetch("ours.json?t="+Date.now(),{cache:"no-store"});if(r.ok)repo=(await r.json()).filter(x=>x&&x.sym)}catch(e){}}
 function allMine(){const seen=new Set(repo.map(m=>m.sym.toUpperCase()));
-  return repo.map(m=>({...m,fromRepo:true})).concat(mine.map((m,i)=>({...m,li:i})).filter(m=>!seen.has(m.sym.toUpperCase())))}
+  return repo.map(m=>({...m,fromRepo:true})).concat(mine.map((m,i)=>({...m,li:i})).filter(m=>!seen.has(m.sym.toUpperCase())&&!DROPPED.has(m.sym.toUpperCase())))}
 function render(){
   if(!data)return;
   const vb=data.coins.filter(c=>c.flags.includes("Volume building")).sort((a,b)=>b.volRatio-a.volRatio).slice(0,5);
