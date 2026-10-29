@@ -1,30 +1,31 @@
 {
- "volume_alerts": {
-  "CATI": "2026-10-28T00:06:00Z",
-  "NOM": "2026-10-28T00:06:00Z",
-  "ABT": "2026-10-28T00:06:00Z",
-  "REZ": "2026-10-28T00:06:00Z",
-  "MOVR": "2026-10-28T00:06:00Z",
-  "HUMA": "2026-10-28T00:06:00Z",
-  "REALX": "2026-10-28T00:06:00Z",
-  "PUFFR": "2026-10-28T02:02:00Z",
-  "HAEDAL": "2026-10-28T05:10:00Z",
-  "XAN": "2026-10-28T10:06:00Z"
- },
- "level_alerts": {},
- "note": "NOM volume flag logged but not messaged (already held). Level alerts keyed SYM|level|YYYY-MM-DD (MYT). PUMP sold 28 Oct; DOOD now held (level alerts: TP 0.080/0.083, cut 0.064).",
- "last_check": "2026-10-28T10:06:00Z",
- "positions": {
-  "NOM": {
-   "entry": 0.05675
+  "volume_alerts": {
+    "CATI": "2026-10-28T00:06:00Z",
+    "NOM": "2026-10-28T00:06:00Z",
+    "ABT": "2026-10-28T00:06:00Z",
+    "REZ": "2026-10-28T00:06:00Z",
+    "MOVR": "2026-10-28T00:06:00Z",
+    "HUMA": "2026-10-28T00:06:00Z",
+    "REALX": "2026-10-29T00:07:00Z",
+    "PUFFR": "2026-10-28T02:02:00Z",
+    "HAEDAL": "2026-10-28T05:10:00Z",
+    "XAN": "2026-10-28T10:06:00Z",
+    "BLUR": "2026-10-28T11:03:00Z",
+    "BICO": "2026-10-29T00:07:00Z"
   },
-  "DOOD": {
-   "entry": 0.0699,
-   "tp": [
-    0.08,
-    0.083
-   ],
-   "cut": 0.064
+  "level_alerts": {},
+  "note": "NOM volume flag logged but not messaged (already held). Level alerts keyed SYM|level|YYYY-MM-DD (MYT). PUMP sold 28 Oct; DOOD now held (level alerts: limit TP 0.10 set 29 Oct, cut 0.064).",
+  "last_check": "2026-10-29T00:07:00Z",
+  "positions": {
+    "NOM": {
+      "entry": 0.05675
+    },
+    "DOOD": {
+      "entry": 0.0699,
+      "tp": [
+        0.1
+      ],
+      "cut": 0.064
+    }
   }
- }
 }
