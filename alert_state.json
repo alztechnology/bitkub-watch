@@ -1,6 +1,6 @@
 {
   "volume_alerts": {
-    "CATI": "2026-10-28T00:06:00Z",
+    "CATI": "2026-10-29T03:04:00Z",
     "NOM": "2026-10-28T00:06:00Z",
     "ABT": "2026-10-28T00:06:00Z",
     "REZ": "2026-10-28T00:06:00Z",
@@ -11,11 +11,15 @@
     "HAEDAL": "2026-10-28T05:10:00Z",
     "XAN": "2026-10-28T10:06:00Z",
     "BLUR": "2026-10-28T11:03:00Z",
-    "BICO": "2026-10-29T00:07:00Z"
+    "BICO": "2026-10-29T00:07:00Z",
+    "B3": "2026-10-29T02:06:00Z",
+    "RESOLV": "2026-10-29T04:03:00Z"
   },
-  "level_alerts": {},
+  "level_alerts": {
+    "DOOD|cut-10|2026-10-29": "2026-10-29T02:06:00Z"
+  },
   "note": "NOM volume flag logged but not messaged (already held). Level alerts keyed SYM|level|YYYY-MM-DD (MYT). PUMP sold 28 Oct; DOOD now held (level alerts: limit TP 0.10 set 29 Oct, cut 0.064).",
-  "last_check": "2026-10-29T00:07:00Z",
+  "last_check": "2026-10-29T04:03:00Z",
   "positions": {
     "NOM": {
       "entry": 0.05675
@@ -25,7 +29,7 @@
       "tp": [
         0.1
       ],
-      "cut": 0.064
+      "cut": 0.055
     }
   }
 }
